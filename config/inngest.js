@@ -16,7 +16,8 @@ export const syncUserCreation = inngest.createFunction(
         event: 'clerk/user.created'
     },
     async ({ event }) => {
-        const { id, first_name, last_name, email_addresses, image_url } = event.data
+      try{
+          const { id, first_name, last_name, email_addresses, image_url } = event.data
 
         const userData = {
             _id: id,
@@ -26,7 +27,13 @@ export const syncUserCreation = inngest.createFunction(
         }
 
         await connectDB()
-        await User.create(user)
+        await User.create(userData)
+      }
+
+        catch (error) {
+        console.error('Error syncing user creation:', error)
+        throw error
+    }
 
     }
 )
