@@ -10,7 +10,7 @@ const Navbar = () => {
 
   const { isSeller, router, user } = useAppContext();
   const { openSignIn } = useClerk();
-  console.log(user);
+  
 
 
   return (
