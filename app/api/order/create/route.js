@@ -1,37 +1,82 @@
 import connectDB from "@/config/db"
 import { inngest } from "@/config/inngest"
+import Product from "@/models/product"
 import User from "@/models/User"
 import { auth } from "@clerk/nextjs/server"
+import { NextResponse } from "next/server"
 
-export async function POST (request) {
+export async function POST(request) {
     try {
-        const {userId} = await auth()
-        const {address,items} = await request.json()
-        if(!address || items.length == 0){ {
-            return NextResponse.json({success: false, message: "Invalid data"})
+        const { userId } = await auth()
+        if (!userId) {
+            return NextResponse.json({
+                success: false,
+                message: "Unauthorized"
+            }, { status: 401 });
         }
-    }
-        // calculate the amount using items 
-        const amount = items.reduce(async(acc,item)=>{
-            const product = await Product.findById(item.product);
-            return acc + product.offerPrice * item.quantity
-        },0)
+        const { address, items } = await request.json()
+        if (!address || !items || items.length === 0) {
+            return NextResponse.json({
+                success: false,
+                message: "Invalid data - address and items required"
+            }, { status: 400 });
+        }
+        await connectDB()
 
-        await inngest.send({
-            name:'order/created',
-            data:{userId,address,items,amount:amount+ Math.floor(amount * 0.02),
-                date:Date.now()
-            },
+        // calculate the amount using items 
+        let amount = 0;
+        for (const item of items) {
+
+            console.log(item);
             
+            const product = await Product.findById(item.product);
+            if (!product) {
+                return NextResponse.json({
+                    success: false,
+                    message: `Product ${item.product} not found`
+                }, { status: 404 });
+            }
+            amount += product.offerPrice * item.quantity;
+            console.log('📤 Sending order event to Inngest...');
+        }
+        const tax = amount * 0.02;
+        const totalAmount = amount + tax;
+
+        const result = await inngest.send({
+            name: 'order/created',
+            data: {
+                userId,
+                address,
+                items,
+                amount: totalAmount,
+                date: Date.now()
+            },
+
         })
 
+        if (result.isError) {
+            return NextResponse.json({
+                success: false,
+                message: "Error creating order"
+            }, { status: 500 });
+        }
+
+        console.log("📤 Order event sent to Inngest fjfjfjfjfjfjfjfj",result);
+        
         // clear user cart 
         const user = await User.findById(userId)
-        user.cartItem = []
+        if (!user) {
+            return NextResponse.json({
+                success: false,
+                message: "User not found"
+            }, { status: 404 });
+        }
+        user.cartItem = {}
         await user.save()
-        return NextResponse.json({success: true, message: "Order placed successfully"})
+        return NextResponse.json({ success: true, message: "Order placed successfully" })
 
     } catch (error) {
-        return NextResponse.json({success: false, message: error.message})
+        console.error('Error creating order:', error);
+        return NextResponse.json({ success: false, message: error.message })
     }
 }

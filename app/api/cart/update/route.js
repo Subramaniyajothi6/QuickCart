@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 
 export async function POST (request) {
 
+    console.log("update cart");
+
     try {
         const { userId } = await auth()
         const {cartData} = await request.json()
@@ -12,6 +14,7 @@ export async function POST (request) {
         const user = await User.findById(userId)
         user.cartItem = cartData 
         await user.save()
+        console.log(user)
         return NextResponse.json({ success: true })
     } catch (error) {
         return NextResponse.json({ success: false, message: error.message })

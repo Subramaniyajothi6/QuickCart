@@ -1,7 +1,6 @@
 import connectDB from "@/config/db"
 import User from "@/models/User"
 import { auth } from "@clerk/nextjs/server"
-
 import { NextResponse } from "next/server"
 
 export async function GET(request) {
@@ -18,6 +17,12 @@ export async function GET(request) {
         if (!user) {
             return NextResponse.json({ success: false, message: "User not found" })
         }
+        if (Array.isArray(user.cartItem)) {
+            user.cartItem = {};
+            await user.save();
+        }
+        
+        console.log('User cart from DB:', user.cartItem);
         
         return NextResponse.json({ success: true, data: user })
     } catch (error) {

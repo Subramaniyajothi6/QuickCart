@@ -1,6 +1,7 @@
 import { Inngest } from "inngest";
 import connectDB from "./db";
 import User from "@/models/User";
+import Order from "@/models/order";
 
 
 // Create a client to send and receive events
@@ -90,7 +91,7 @@ export const createUserOrder = inngest.createFunction({
         maxSize: 5,
         timeout:'5s'
     }
-},{event:'order.created'},async({event})=>{
+},{event:'order/created'},async({events})=>{
     const orders = events.map((event)=> {
         return {
             userId :event.data.userId,
@@ -102,6 +103,6 @@ export const createUserOrder = inngest.createFunction({
     })
     await connectDB()
     await Order.insertMany(orders)
-    
+     console.log(`✅ ${orders.length} order(s) created in DB`);
     return  {success:true,processed:orders.length}
 })

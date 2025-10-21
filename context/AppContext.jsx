@@ -18,57 +18,57 @@ export const AppContextProvider = (props) => {
     const router = useRouter()
 
     const user = useUser()
-    const {getToken} = useAuth()
+    const { getToken } = useAuth()
 
     const [products, setProducts] = useState([])
     const [userData, setUserData] = useState(false)
     const [isSeller, setIsSeller] = useState(false)
-    const [cartItems, setCartItems] = useState({})
+    const [cartItems, setCartItems] = useState([])
 
     const fetchProductData = async () => {
         try {
 
-            const {data} = await axios.get('/api/product/list')
-            if(data.success){
+            const { data } = await axios.get('/api/product/list')
+            if (data.success) {
                 setProducts(data.products)
-            }else{
+            } else {
                 toast.error(data.message)
             }
-            
+
         } catch (error) {
             toast.error(error.message)
         }
     }
 
     const fetchUserData = async () => {
-      try {
-          if(user.user?.publicMetadata?.role === 'seller'){
-            setIsSeller(true)
-        }
-
-        const token = await getToken()
-        
-         
-        const {data} = await axios.get('/api/user/data', {
-            headers:{
-                Authorization:`Bearer ${token}`
+        try {
+            if (user.user?.publicMetadata?.role === 'seller') {
+                setIsSeller(true)
             }
-        })
 
-        console.log(data);
-        
 
-        if(data.success){
-            setUserData(data.data)
-            setCartItems(data.data.cartItem)
+            const token = await getToken()
+
+
+            const { data } = await axios.get('/api/user/data', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            console.log('User data:', data);
+
+
+            if (data.success) {
+                setUserData(data.data)
+                setCartItems(data.data.cartItem)
+            }
+            else {
+                toast.error(data.message)
+            }
+
+        } catch (error) {
+            toast.error(error.message)
         }
-        else{
-            toast.error(data.message)
-        }
-        
-      } catch (error) {
-         toast.error(error.message)
-      }
     }
 
     const addToCart = async (itemId) => {
@@ -82,22 +82,28 @@ export const AppContextProvider = (props) => {
         }
         setCartItems(cartData);
 
-        
-        if(user){
+
+
+        if (user.isLoaded && user.isSignedIn) {
             try {
                 const token = await getToken()
+                console.log('🛒 Saving cart:', cartData); 
                 await axios.post('/api/cart/update', { cartData }, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 })
                 toast.success("Product added to cart")
-                
+
             } catch (error) {
-                toast.error(error.message)
+                console.error('❌ Cart save error:', error);
+                toast.error(error.response?.data?.message || error.message);
             }
         }
+         else {
+        console.log('⚠️ User not signed in, cart not saved'); 
 
+        }
     }
 
     const updateCartQuantity = async (itemId, quantity) => {
@@ -110,7 +116,7 @@ export const AppContextProvider = (props) => {
         }
         setCartItems(cartData)
 
-         if(user){
+        if (user.isLoaded && user.isSignedIn) {
             try {
                 const token = await getToken()
                 await axios.post('/api/cart/update', { cartData }, {
@@ -119,10 +125,14 @@ export const AppContextProvider = (props) => {
                     }
                 })
                 toast.success("Cart updated")
-                
+
             } catch (error) {
+                console.error('❌ Cart update error:', error); 
                 toast.error(error.message)
             }
+        }
+        else{
+            console.log('⚠️ User not signed in, cart not saved to DB'); 
         }
 
 
@@ -141,7 +151,7 @@ export const AppContextProvider = (props) => {
     const getCartAmount = () => {
         let totalAmount = 0;
         for (const items in cartItems) {
-            let itemInfo = products.find((product) => product._id === items);                        
+            let itemInfo = products.find((product) => product._id === items);
             if (cartItems[items] > 0) {
                 totalAmount += itemInfo.offerPrice * cartItems[items];
             }
@@ -154,13 +164,13 @@ export const AppContextProvider = (props) => {
     }, [])
 
     useEffect(() => {
-     if(user.isLoaded && user.isSignedIn){ 
-        fetchUserData()
-     }
+        if (user.isLoaded && user.isSignedIn) {
+            fetchUserData()
+        }
     }, [user.isLoaded, user.isSignedIn])
 
     const value = {
-        user,getToken,
+        user, getToken,
         currency, router,
         isSeller, setIsSeller,
         userData, fetchUserData,
