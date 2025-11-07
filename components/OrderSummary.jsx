@@ -553,8 +553,7 @@ const OrderSummary = () => {
         className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {isProcessing ? 'Processing...' 
-        : 'Place Order'
-          // selectedPaymentMethod === 'cod' ? 'Place Order' : 'Proceed to Payment'
+        : selectedPaymentMethod === 'cod' ? 'Place Order' : 'Proceed to Payment'
           }
       </button>
     </div>
