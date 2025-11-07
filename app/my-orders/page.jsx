@@ -10,8 +10,8 @@ import axios from "axios";
 
 const MyOrders = () => {
 
-    
-    const { currency,getToken,user} = useAppContext();
+
+    const { currency, getToken, user } = useAppContext();
 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,31 +19,31 @@ const MyOrders = () => {
     const fetchOrders = async () => {
         try {
             const token = await getToken()
-            const {data} = await axios.get('/api/order/list',{
-                headers:{
-                    Authorization:`Bearer ${token}`
+            const { data } = await axios.get('/api/order/list', {
+                headers: {
+                    Authorization: `Bearer ${token}`
                 }
             })
 
-            if(data.success){
+            if (data.success) {
                 setOrders(data.orders.reverse())
                 setLoading(false)
             }
             else {
                 toast.error(data.message)
             }
-            
+
         } catch (error) {
 
             toast.error(error.message)
-            
+
         }
         // setOrders(orderDummyData)
         // setLoading(false);
     }
 
     useEffect(() => {
-        if(user){
+        if (user) {
 
             fetchOrders();
         }
@@ -85,9 +85,9 @@ const MyOrders = () => {
                                 <p className="font-medium my-auto">{currency}{order.amount}</p>
                                 <div>
                                     <p className="flex flex-col">
-                                        <span>Method : COD</span>
+                                        <span>Method : {order.paymentMethod === 'card' ? 'Card' : 'COD'}</span>
                                         <span>Date : {new Date(order.date).toLocaleDateString()}</span>
-                                        <span>Payment : Pending</span>
+                                        <span>Payment : {order.paymentStatus === 'completed' ? '✅ Completed' : '⏳ Pending'}</span>
                                     </p>
                                 </div>
                             </div>
@@ -101,3 +101,4 @@ const MyOrders = () => {
 };
 
 export default MyOrders;
+
