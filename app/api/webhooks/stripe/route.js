@@ -67,7 +67,6 @@
 // }
 
 
-
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import connectDB from '@/config/db';
@@ -133,25 +132,29 @@ export async function POST(request) {
     }
 }
 
-// ✅ Handle successful payment
+// ✅ Handle successful payment - CORRECTED
 async function handleSuccessfulPayment(session) {
     try {
         console.log('💳 Processing successful payment for session:', session.id);
 
-        // Find order by Stripe CHECKOUT SESSION ID (not payment_intent)
+        // Find order by Stripe CHECKOUT SESSION ID
         const order = await Order.findOne({ stripeSessionId: session.id });
 
         if (order) {
-            order.paymentStatus = 'paid';
+            // ✅ FIXED: Use 'completed' instead of 'paid' (matches your Order model enum)
+            order.paymentStatus = 'completed';
             order.stripePaymentIntentId = session.payment_intent;
+            // ✅ FIXED: Update payment method to 'card' (matches your Order model enum)
+            order.paymentMethod = 'card';
             await order.save();
             
-            console.log('✅ Order payment status updated to PAID:', order._id);
+            console.log('✅ Order payment status updated to COMPLETED:', order._id);
         } else {
             console.log('⚠️ Order not found for session:', session.id);
         }
     } catch (error) {
         console.error('❌ Error handling successful payment:', error);
+        console.error('Error details:', error.message);
     }
 }
 
@@ -164,6 +167,7 @@ async function handleFailedPayment(session) {
         const order = await Order.findOne({ stripeSessionId: session.id });
 
         if (order) {
+            // ✅ 'failed' is already correct (matches your Order model enum)
             order.paymentStatus = 'failed';
             await order.save();
             
@@ -173,5 +177,6 @@ async function handleFailedPayment(session) {
         }
     } catch (error) {
         console.error('❌ Error handling failed payment:', error);
+        console.error('Error details:', error.message);
     }
 }
