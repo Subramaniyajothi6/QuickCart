@@ -23,7 +23,8 @@ export const AppContextProvider = (props) => {
     const [products, setProducts] = useState([])
     const [userData, setUserData] = useState(false)
     const [isSeller, setIsSeller] = useState(false)
-    const [cartItems, setCartItems] = useState([])
+    // const [cartItems, setCartItems] = useState([])
+    const [cartItems, setCartItems] = useState({})
 
     const fetchProductData = async () => {
         try {
@@ -59,8 +60,14 @@ export const AppContextProvider = (props) => {
 
 
             if (data.success) {
-                setUserData(data.data)
-                setCartItems(data.data.cartItem)
+                // setUserData(data.data)
+                // setCartItems(data.data.cartItem)
+                setUserData(data.user)
+                if (data.user && data.user.cartItem && typeof data.user.cartItem === 'object') {
+                    setCartItems(data.user.cartItem)
+                } else {
+                    setCartItems({}) // Set empty object if no cart
+                }
             }
             else {
                 toast.error(data.message)
@@ -87,7 +94,7 @@ export const AppContextProvider = (props) => {
         if (user.isLoaded && user.isSignedIn) {
             try {
                 const token = await getToken()
-                console.log('🛒 Saving cart:', cartData); 
+                console.log('🛒 Saving cart:', cartData);
                 await axios.post('/api/cart/update', { cartData }, {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -100,8 +107,8 @@ export const AppContextProvider = (props) => {
                 toast.error(error.response?.data?.message || error.message);
             }
         }
-         else {
-        console.log('⚠️ User not signed in, cart not saved'); 
+        else {
+            console.log('⚠️ User not signed in, cart not saved');
 
         }
     }
@@ -127,12 +134,12 @@ export const AppContextProvider = (props) => {
                 toast.success("Cart updated")
 
             } catch (error) {
-                console.error('❌ Cart update error:', error); 
+                console.error('❌ Cart update error:', error);
                 toast.error(error.message)
             }
         }
-        else{
-            console.log('⚠️ User not signed in, cart not saved to DB'); 
+        else {
+            console.log('⚠️ User not signed in, cart not saved to DB');
         }
 
 
