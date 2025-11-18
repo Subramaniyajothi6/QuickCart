@@ -1,48 +1,3 @@
-// import { NextResponse } from 'next/server';
-// import Stripe from 'stripe';
-
-// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-// export async function POST(request) {
-//   try {
-//     const { amount, currency, cartItems, addressId } = await request.json();
-
-//     // Create Stripe Checkout Session
-//     const session = await stripe.checkout.sessions.create({
-//       payment_method_types: ['card'],
-//       line_items: [
-//         {
-//           price_data: {
-//             currency: 'usd',
-//             product_data: {
-//               name: 'Order Total',
-//               description: `Order with ${cartItems.length} items`,
-//             },
-//             unit_amount: Math.round(amount * 100), // Stripe uses cents
-//           },
-//           quantity: 1,
-//         },
-//       ],
-//       mode: 'payment',
-//       success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/my-orders?success=true`,
-//       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/cart?canceled=true`,
-//       metadata: {
-//         addressId: addressId,
-//         cartItems: JSON.stringify(cartItems),
-//       },
-//     });
-
-//     return NextResponse.json({ sessionId: session.id, url: session.url });
-//   } catch (error) {
-//     console.error('Stripe error:', error);
-//     return NextResponse.json(
-//       { error: error.message },
-//       { status: 500 }
-//     );
-//   }
-// }
-
-
 
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
@@ -101,8 +56,8 @@ export async function POST(request) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/my-orders?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/checkout?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://quick-cart-five-mocha.vercel.app'}/my-orders?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://quick-cart-five-mocha.vercel.app'}/checkout?canceled=true`,
       metadata: {
         userId,
         addressId: addressId,
